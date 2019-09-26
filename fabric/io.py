@@ -25,7 +25,7 @@ def _endswith(char_list, substring):
 
 
 def _has_newline(bytelist):
-    return '\r' in bytelist or '\n' in bytelist
+    return b'\r' in bytelist or b'\n' in bytelist
 
 
 def output_loop(*args, **kwargs):
@@ -50,7 +50,7 @@ class OutputLooper(object):
         self.write_buffer = RingBuffer([], maxlen=len(self.prefix))
 
     def _flush(self, text):
-        self.stream.write(text)
+        self.stream.write(str(text))
         # Actually only flush if not in linewise mode.
         # When linewise is set (e.g. in parallel mode) flushing makes
         # doubling-up of line prefixes, and other mixed output, more likely.
@@ -101,7 +101,7 @@ class OutputLooper(object):
                 self._flush(bytelist)
             # Otherwise, we're in run/sudo and need to handle capturing and
             # prompts.
-            else:
+            elif len(bytelist) > 0:
                 # Print to user
                 if self.printing:
                     printable_bytes = bytelist
@@ -114,7 +114,7 @@ class OutputLooper(object):
 
                     while _has_newline(printable_bytes) and printable_bytes != "":
                         # at most 1 split !
-                        cr = re.search("(\r\n|\r|\n)", printable_bytes)
+                        cr = re.search("(\r\n|\r|\n)", str(printable_bytes))
                         if cr is None:
                             break
                         end_of_line = printable_bytes[:cr.start(0)]
@@ -142,7 +142,7 @@ class OutputLooper(object):
                         self._flush(printable_bytes)
 
                 # Now we have handled printing, handle interactivity
-                read_lines = re.split(r"(\r|\n|\r\n)", bytelist)
+                read_lines = re.split(r"(\r|\n|\r\n)", str(bytelist))
                 for fragment in read_lines:
                     # Store in capture buffer
                     self.capture += fragment
@@ -159,10 +159,13 @@ class OutputLooper(object):
                             self.prompt()
                         elif try_again:
                             self.try_again()
+            else:
+                break
+
 
         # Print trailing new line if the last thing we printed was our line
         # prefix.
-        if self.prefix and "".join(self.write_buffer) == self.prefix:
+        if self.prefix and "".join(str(self.write_buffer)) == self.prefix:
             self._flush('\n')
 
     def prompt(self):
@@ -213,7 +216,7 @@ class OutputLooper(object):
         Iterate through the request prompts dict and return the response and
         original request if we find a match
         """
-        for tup in env.prompts.iteritems():
+        for tup in env.prompts.items():
             if _endswith(self.capture, tup[0]):
                 return tup
         return None, None

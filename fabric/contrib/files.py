@@ -6,7 +6,7 @@ from __future__ import with_statement
 
 import hashlib
 import os
-from StringIO import StringIO
+from io import StringIO
 from functools import partial
 
 from fabric.api import run, sudo, hide, settings, env, put, abort

@@ -367,7 +367,7 @@ def _is_task(name, value):
 
 def _sift_tasks(mapping):
     tasks, collections = [], []
-    for name, value in mapping.iteritems():
+    for name, value in mapping.items():
         if _is_task(name, value):
             tasks.append(name)
         elif isMappingType(value):

@@ -87,7 +87,7 @@ class OutputLooper(object):
                     raise CommandTimeout(timeout=self.timeout)
                 continue
             # Empty byte == EOS
-            if bytelist == '':
+            if bytelist.decode("utf-8", "ignore") == '':
                 # If linewise, ensure we flush any leftovers in the buffer.
                 if self.linewise and line:
                     self._flush(self.prefix)
@@ -98,7 +98,7 @@ class OutputLooper(object):
                 # Just print directly -- no prefixes, no capturing, nada
                 # And since we know we're using a pty in this mode, just go
                 # straight to stdout.
-                self._flush(bytelist)
+                self._flush(bytelist.decode("utf-8", "ignore"))
             # Otherwise, we're in run/sudo and need to handle capturing and
             # prompts.
             elif len(bytelist) > 0:
@@ -114,7 +114,7 @@ class OutputLooper(object):
 
                     while _has_newline(printable_bytes) and printable_bytes != "":
                         # at most 1 split !
-                        cr = re.search("(\r\n|\r|\n)", str(printable_bytes))
+                        cr = re.search("(\r\n|\r|\n)", str(printable_bytes.decode("utf-8", "ignore")))
                         if cr is None:
                             break
                         end_of_line = printable_bytes[:cr.start(0)]
@@ -127,10 +127,10 @@ class OutputLooper(object):
                             end_of_line = ''
 
                         if self.linewise:
-                            self._flush("".join(line) + end_of_line + "\n")
+                            self._flush("".join(line) + end_of_line.decode("utf-8", "ignore") + "\n")
                             line = []
                         else:
-                            self._flush(end_of_line + "\n")
+                            self._flush(end_of_line.decode("utf-8", "ignore") + "\n")
                         initial_prefix_printed = False
 
                     if self.linewise:
@@ -139,10 +139,10 @@ class OutputLooper(object):
                         if not initial_prefix_printed:
                             self._flush(self.prefix)
                             initial_prefix_printed = True
-                        self._flush(printable_bytes)
+                        self._flush(printable_bytes.decode("utf-8", "ignore"))
 
                 # Now we have handled printing, handle interactivity
-                read_lines = re.split(r"(\r|\n|\r\n)", str(bytelist))
+                read_lines = re.split(r"(\r|\n|\r\n)", str(bytelist.decode("utf-8", "ignore")))
                 for fragment in read_lines:
                     # Store in capture buffer
                     self.capture += fragment
